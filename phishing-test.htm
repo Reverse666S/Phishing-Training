@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Security Check</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --muted: #94a3b8;
+      --text: #e5e7eb;
+      --accent: #22c55e;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --ring: rgba(34,197,94,0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial;
+      background: linear-gradient(135deg, #0b1022, var(--bg)); color: var(--text);
+      min-height: 100dvh; display: grid; place-items: center; padding: 24px;
+    }
+    .wrap { width: 100%; max-width: 980px; display: grid; gap: 16px; }
+    .banner {
+      background: #0b3a2a; border: 1px solid #0e6247; color: #a7f3d0; border-radius: 14px; padding: 10px 14px; font-size: 14px;
+    }
+    .grid { display: grid; gap: 16px; grid-template-columns: 1.1fr 1fr; align-items: start; }
+    @media (max-width: 860px){ .grid { grid-template-columns: 1fr; } }
+    .card { background: rgba(17,24,39,0.85); backdrop-filter: blur(6px); border: 1px solid #1f2937; border-radius: 18px; padding: 22px; box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0.2px; }
+    p { margin: 0; color: var(--muted); }
+    .muted { color: var(--muted); font-size: 14px; }
+    label { display: block; font-size: 14px; color: #cbd5e1; margin: 8px 0 6px; }
+    input[type="text"], input[type="password"]{
+      width: 100%; background: #0b1220; color: var(--text); border: 1px solid #1f2937; border-radius: 12px; padding: 12px 14px; outline: none;
+    }
+    input[type="text"]:focus, input[type="password"]:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--ring); }
+    button { cursor: pointer; border: 0; padding: 12px 14px; border-radius: 12px; }
+    .btn-primary { background: var(--accent); color: #001307; font-weight: 700; }
+    .btn-ghost { background: transparent; border: 1px dashed #334155; color: #cbd5e1; }
+    .row { display: flex; gap: 10px; align-items: center; }
+    .kpi { display:grid; gap:8px; grid-template-columns: repeat(3,1fr); }
+    .kpi .tile { background:#0b1220; border:1px solid #1f2937; border-radius:12px; padding:12px; text-align:center; }
+    .tile .num { font-size: 22px; font-weight: 800; }
+    .code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace; background:#0b1220; border:1px solid #1f2937; border-radius:10px; padding:10px; }
+    .warn { color: var(--warn); }
+    .danger { color: var(--danger); }
+    .divider { height:1px; background:#1f2937; margin: 12px 0; }
+    .pill { display:inline-block; padding:4px 8px; border-radius: 9999px; background:#0b1220; border:1px solid #1f2937; font-size:12px; color:#cbd5e1; }
+    .footer { text-align:center; font-size:12px; color:#94a3b8; }
+    table { width:100%; border-collapse:collapse; margin-top:16px; }
+    th, td { border:1px solid #1f2937; padding:8px; font-size:13px; text-align:left; }
+    th { background:#1e293b; color:#cbd5e1; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Training-Banner: Immer sichtbar, damit klar ist, dass es eine Simulation ist. -->
+    <div class="banner" id="trainingBanner">
+      🔒 Sicherheits-Training – Phishing-Simulation. Es werden keine Passwörter erfasst. Nur Klick-/Versuchs-Events werden für Schulungszwecke protokolliert.
+    </div>
+
+    <div class="grid">
+      <!-- Link/Landing & Fake-Login (Simulation) -->
+      <section class="card" id="landing">
+        <h1>Security Check – Kontoüberprüfung</h1>
+        <p class="muted">Zur Bestätigung deiner Identität führe bitte die Überprüfung durch.</p>
+        <div class="divider"></div>
+
+        <form id="loginForm" autocomplete="off">
+          <div class="row" style="justify-content: space-between;">
+            <span class="pill">Fall-ID: <span id="uidPill">—</span></span>
+            <span class="pill">Kampagne: <span id="cmpPill">standard</span></span>
+          </div>
+          <label for="user">Benutzername (optional)</label>
+          <input id="user" type="text" inputmode="verbatim" placeholder="z. B. vorname.nachname" autocomplete="off" />
+
+          <label for="pass">Passwort (wird NICHT gespeichert)</label>
+          <input id="pass" type="password" placeholder="••••••••" autocomplete="new-password" />
+
+          <div class="row" style="margin-top:14px;">
+            <button type="submit" class="btn-primary">Überprüfung starten</button>
+            <button type="button" class="btn-ghost" id="showHints">Phishing-Hinweise anzeigen</button>
+          </div>
+          <p class="muted" style="margin-top:10px;">Tipp: Klicke auf „Phishing-Hinweise anzeigen“, wenn du unsicher bist.</p>
+        </form>
+      </section>
+
+      <!-- Admin/Coach Sidecard: Live KPIs (clientseitig) -->
+      <aside class="card">
+        <h2 style="margin:0 0 6px;">Live-Übersicht (Client)</h2>
+        <p class="muted">Diese Kacheln spiegeln lokale Events wider. Für echte Auswertung bitte Server-Logging anbinden.</p>
+        <div class="divider"></div>
+        <div class="kpi">
+          <div class="tile"><div class="num" id="kpiClicks">0</div><div class="muted">Klicks</div></div>
+          <div class="tile"><div class="num" id="kpiSubmits">0</div><div class="muted">Form-Submits</div></div>
+          <div class="tile"><div class="num" id="kpiHints">0</div><div class="muted">Hinweis-Klicks</div></div>
+        </div>
+        <div style="margin-top:12px;" class="code" id="logBox" aria-live="polite"></div>
+
+        <!-- Gespeicherte Events Tabelle -->
+        <h3 style="margin-top:16px;">Gespeicherte Events</h3>
+        <table id="eventsTable">
+          <thead>
+            <tr><th>Zeit</th><th>Event</th><th>Details</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </aside>
+    </div>
+
+    <!-- Awareness Sheet (wird nach Submit gezeigt) -->
+    <section class="card" id="awareness" hidden>
+      <h2>Gut zu wissen: So erkennst du Phishing</h2>
+      <ul>
+        <li>🔗 <strong>Domain prüfen:</strong> Passt die Adresse exakt zur echten Unternehmensdomain?</li>
+        <li>⏱️ <strong>Druck durch Zeit:</strong> "Sofort handeln" ist ein häufiges Muster.</li>
+        <li>🔒 <strong>Niemals Passwörter eingeben</strong> über E-Mail-Links. Öffne die echte Seite manuell.</li>
+        <li>✍️ <strong>Rechtschreibung & Ton:</strong> Ungewöhnliche Formulierungen sind verdächtig.</li>
+        <li>📎 <strong>Anhänge/Buttons:</strong> Prüfe erst, bevor du klickst.</li>
+      </ul>
+      <div class="divider"></div>
+      <p class="muted">Diese Seite ist eine <em>Phishing-Simulation</em>. Es wurden keine Zugangsdaten gespeichert.</p>
+    </section>
+
+    <p class="footer">© Security Awareness Training – Demo. Nur für Testzwecke. Keine echten Anmeldedaten verwenden.</p>
+  </div>
+
+  <script>
+    const LOG_ENDPOINT = "/log";
+    const SEND_TO_SERVER = false;
+
+    const qs = (s, el=document) => el.querySelector(s);
+    const logBox = qs('#logBox');
+    const tableBody = qs('#eventsTable tbody');
+    const kpi = { clicks: 0, submits: 0, hints: 0 };
+
+    function appendLog(msg){
+      const time = new Date().toLocaleTimeString();
+      logBox.textContent += `[${time}] ${msg}\n`;
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function getParam(name){
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
+    }
+    function uid(){ return getParam('uid') || 'anonymous'; }
+    function cmp(){ return getParam('cmp') || 'default'; }
+
+    function renderEvents(){
+      const key = 'phishsim_events';
+      const list = JSON.parse(localStorage.getItem(key) || '[]');
+      tableBody.innerHTML = '';
+      list.forEach(ev => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${new Date(ev.ts).toLocaleTimeString()}</td><td>${ev.event}</td><td>${JSON.stringify(ev.details)}</td>`;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    async function logEvent(event, details={}){
+      const payload = {
+        uid: uid(),
+        campaign: cmp(),
+        event,
+        details,
+        ts: new Date().toISOString(),
+        href: location.href
+      };
+      appendLog(`${event} ${JSON.stringify(details)}`);
+      try{
+        if(SEND_TO_SERVER){
+          await fetch(LOG_ENDPOINT, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(payload),
+            keepalive: true
+          });
+        } else {
+          const key = 'phishsim_events';
+          const list = JSON.parse(localStorage.getItem(key) || '[]');
+          list.push(payload);
+          localStorage.setItem(key, JSON.stringify(list));
+          renderEvents();
+        }
+      } catch(err){
+        appendLog('Server-Logging fehlgeschlagen.');
+      }
+    }
+
+    (function init(){
+      qs('#uidPill').textContent = uid();
+      qs('#cmpPill').textContent = cmp();
+      logEvent('page_open');
+      renderEvents();
+    })();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if(document.referrer) {
+        kpi.clicks++; qs('#kpiClicks').textContent = String(kpi.clicks);
+        logEvent('link_click', { referrer: document.referrer });
+      }
+    });
+
+    qs('#showHints').addEventListener('click', () => {
+      kpi.hints++; qs('#kpiHints').textContent = String(kpi.hints);
+      logEvent('hints_open');
+      alert('Hinweise: Prüfe Domain, SSL, Sprache & fordere niemals per Link Passwörter an.');
+    });
+
+    qs('#loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = qs('#user').value.trim();
+      kpi.submits++; qs('#kpiSubmits').textContent = String(kpi.submits);
+      logEvent('form_submit', { username_provided: Boolean(username) });
+      qs('#landing').setAttribute('hidden', '');
+      qs('#awareness').removeAttribute('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  </script>
+</body>
+</html>
